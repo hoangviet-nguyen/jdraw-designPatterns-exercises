@@ -23,16 +23,19 @@ public class StdDrawModel implements DrawModel {
 	private final List<DrawModelListener> listeners = new CopyOnWriteArrayList<>();
 	private final List<Figure> figures = new CopyOnWriteArrayList<>();
 	private final Map<Figure, FigureListener> figureListener = new HashMap<>();
+
 	public void handleEvent(DrawModelEvent event) {
 		for (DrawModelListener listener:listeners) {
 			listener.modelChanged(event);
 		}
 	}
+
 	@Override
 	public void addFigure(Figure f) {
 		if (!figures.contains(f)) {
-			figureListener.put(f, new ModelListener());
-			f.addFigureListener(figureListener.get(f));
+			ModelListener listener = new ModelListener();
+			figureListener.put(f, listener);
+			f.addFigureListener(listener);
 			figures.add(f);
 			handleEvent(new DrawModelEvent(this, f, DrawModelEvent.Type.FIGURE_ADDED));
 		}
@@ -91,12 +94,13 @@ public class StdDrawModel implements DrawModel {
 	public void setFigureIndex(Figure f, int desiredIndex) {
 		if (desiredIndex < 0 || desiredIndex >= figures.size()) {
 			throw new IndexOutOfBoundsException("Given index is out of bound");
-		} else if (!figures.contains(f)) {
+		}
+
+		if (!figures.contains(f)) {
 			throw new IllegalArgumentException("Figure does not exist");
 		}
-		int currentIndex = figures.indexOf(f);
 
-		//check if indexes are the same
+		int currentIndex = figures.indexOf(f);
 		if (currentIndex == desiredIndex) return;
 
 		//Bring front Figure to Back;
@@ -105,6 +109,7 @@ public class StdDrawModel implements DrawModel {
 				Collections.swap(figures, currentIndex, currentIndex -1);
 				currentIndex--;
 			}
+		
 		//Bring back Figure to Front
 		} else {
 			while (currentIndex < desiredIndex) {
